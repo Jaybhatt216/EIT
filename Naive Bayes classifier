@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal as mvn #(for stats methods like bayes)
 
 
-data = pd.read_csv("exNB.csv",header=None)
+data = pd.read_csv("/Users/jbhatt/Documents/exNB.csv",header=None)
 #print(data.head(5))
 #print(data.shape)
 
@@ -50,5 +50,16 @@ class GaussNB():
         N,D = X.shape
         P_hat = np.zeros((N,len(self.K)))
         for k,l in self.likelyhoods.items():
-            P_hat[:,k] = mvn.logpdf(X,l["mean"],l["cov"])+np.log(self.priors[k])
+            P_hat[:,k] = mvn.logpdf(X,l["mean"],l["variance"])+np.log(self.priors[k])
         return P_hat.argmax(axis=1)
+
+
+gnb = GaussNB()
+gnb.fit(X,y)
+y_hat = gnb.predict(X)
+
+def accuracy(y,y_hat):
+    return np.mean(y== y_hat)
+
+print(accuracy(y,y_hat))
+
