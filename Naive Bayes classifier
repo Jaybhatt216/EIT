@@ -1,0 +1,54 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import multivariate_normal as mvn #(for stats methods like bayes)
+
+
+data = pd.read_csv("exNB.csv",header=None)
+#print(data.head(5))
+#print(data.shape)
+
+
+X = data.to_numpy() #turn into numpy array
+y = X[:,-1] #y is lables, this shorthand means everysingle row in the last column 
+X = X[:,:-1] # X is every row in every column except the last one
+
+#print(y.shape)
+
+###graphing###
+#weight
+plt.figure()
+plt.hist(X[y == 1,0],label='Male',alpha=0.5,bins=30) #histogram of X where y is 0 or 1
+plt.hist(X[y == 0,0],label = 'Female',alpha=0.5,bins=30)
+plt.legend()
+
+#height
+plt.figure()
+plt.hist(X[y==1,1],label = "Male",alpha=0.8)
+plt.hist(X[y==0],label = "Female",alpha=0.25)
+plt.legend()
+
+plt.figure()
+plt.scatter(X[:,0],X[:,1],c=y,alpha=0.25)#all the data in x axis and Y axis
+
+#building classifier
+
+class GaussNB():
+    def fit(self, X, y, epsilon = 1e-3):
+        self.likelyhoods = dict()
+        self.priors = dict()
+
+        self.K = set(y.astype(int))#a range of ints of unique items like 0 to 7
+
+        for k in self.K:
+            X_k = X[y==k,:]
+            self.likelyhoods[k] = {'mean':X_k.mean(axis=0),'variance':X_k.var(axis=0)+ epsilon}
+            self.priors[k] = len(X_k)/len(X) # number of class /total number
+    
+    def predict(self, X):
+
+        N,D = X.shape
+        P_hat = np.zeros((N,len(self.K)))
+        for k,l in self.likelyhoods.items():
+            P_hat[:,k] = mvn.logpdf(X,l["mean"],l["cov"])+np.log(self.priors[k])
+        return P_hat.argmax(axis=1)
