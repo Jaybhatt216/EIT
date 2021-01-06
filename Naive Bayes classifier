@@ -52,6 +52,32 @@ class GaussNB():
         for k,l in self.likelyhoods.items():
             P_hat[:,k] = mvn.logpdf(X,l["mean"],l["variance"])+np.log(self.priors[k])
         return P_hat.argmax(axis=1)
+ #Bernouil Naive Bayes
+class BernNB():
+    def fit(self, X, Y, epislon = 1e-10):
+        N, D = X.shape
+        self.likelihoods = {}
+        self.priors = {}
+        self.K = set(y.astype(int))
+        
+        for k in self.K:
+            X_k = X[y==k,:]
+            P = (sum(X_k)+ 1) / (len(X_k)+2)
+            self.likelihood[k] = {'mean': p, 'cov': p * (1 - p) + epsilon}
+            self.priors[k] = len(X_k)/ len(X)
+
+    def predict(self, X):
+        N, D = X.shape
+        P_hat = np.zero((N,  len(self.K)))
+
+        for k,l in self.likelihoods.items():
+            #using Bernouil unction/Formal. Trick is to get the matrices/vectors to go from mxn to a 1x1 number for each k value.
+            P_hat[:,k] = np.log(self.priors[k]) + np.matmul(X, np.log(l['mean'])) + np.matmul((1 - X), np.log(abs(1 -l['mean']))) 
+            
+
+
+
+       
 
 
 gnb = GaussNB()
