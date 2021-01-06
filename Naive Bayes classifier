@@ -96,3 +96,16 @@ bnb.fit(X_train,y_train) # Use the X and Y Training set here
 y_hat = bnb.predict(X_test) # Use the X Test here
 print(accuracy(y_test, y_hat))    
 
+#not naive bayes
+class GaussBayes():
+    def fit(self, X, y, epsilon = 1e-3):
+        self.likelihoods = dict()
+        self.priors = dict()
+        sefl.K = set(y.astype(int))
+
+        for k in self.K:
+            X_k = X[y == k,:]
+            N_k, D = X_k.shape
+            mu_k == X_k.mean(axis=0)
+            self.likelihoods[k] = {"mean" : X_k.mean(axis=0),"cov":
+                                  (1/(N_k-1))*np.matmul(X_k-mu_k.T,X_k - mu_k)+ epsilon*np.identity(D) }
