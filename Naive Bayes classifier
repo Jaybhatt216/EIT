@@ -109,3 +109,12 @@ class GaussBayes():
             mu_k == X_k.mean(axis=0)
             self.likelihoods[k] = {"mean" : X_k.mean(axis=0),"cov":
                                   (1/(N_k-1))*np.matmul(X_k-mu_k.T,X_k - mu_k)+ epsilon*np.identity(D) }
+    
+   def predict(self, X):
+        N,D = X.shape
+        P_hat = np.zeros((N, len(self.K)))
+
+        for k,l in self.likelihoods.items():
+            P_hat[:,k] = mvn.logpdf(X, l["mean"], l["cov"])+np.log(self.priors[k])
+
+        return P_hat.argmax(axis=1)
