@@ -118,3 +118,70 @@ class GaussBayes():
             P_hat[:,k] = mvn.logpdf(X, l["mean"], l["cov"])+np.log(self.priors[k])
 
         return P_hat.argmax(axis=1)
+        
+        
+        
+#multinomial distribution        
+
+class GenBayes():
+    def fit(self,X,y,DistStr,epsilon = 1e-3):
+        self.likelihoods =  dict() #chance of the event
+        self.priors = dict() #prior chance of the event 
+
+        self.K = set(y.astype(int)) #a list of unique  class
+        
+        if DistStr == "Gauss": #if its a guass distribution
+            for k in self.K: #for class in set of class
+                X_k = X[y==k,:] #x_k gets all values under class 1
+                N_k, D = X_k.shape # D is the number of features D stands for dimensions, N_k = number of elemenrs in X_k
+                mu_k = X_k.mean(axis=0) #mu_k is the mean of X_k
+
+                self.likelihoods[k] = {"mean":mu_k,"cov": (1/(N_k-1))
+                                                        *np.matmul((X_k-mu_k).T,X_k-mu_k)+ 
+                                                        epsilon*np.identity(D)} #where the learning of Machine learning happens the matrix multiplication
+                self.priors[k] = len(X_k)/len(X)
+
+        if DistStr == "Multinomial":
+            for k in self.K: #for class in set of class
+                X_k = X[y==k,:] #x_k gets all values under class 1
+                N_k, D = X_k.shape # D is the number of features D stands for dimensions, N_k = number of elemenrs in X_k
+                mu_k = X_k.mean(axis=0) #mu_k is the mean of X_k
+                N =  len(X)
+
+                self.likelihoods[k] = {"N":N, "p":sum(N_k/len(X))}
+                self.priors[k] = len(X_k)/len(X)
+
+        if DistStr == "Bernoulli":
+            for k in self.K:
+                X_k = X[y==k,:]
+                N_k,D = X.shape
+
+                self.likelihoods[k] = {"P":N_k/len(X)}
+                self.priors[k] = len(X_k)/len(X)
+
+
+    def predict(self,X, DistStr):
+        N, D = X.shape
+
+        if DistStr == "Gauss":
+            P_hat = np.zeros((N,len(self,K)))
+
+            for k,l in self.likelihoods.items():
+                P_hat[:,k] = mvn.logpdf(X,l["mean"],l["cov"] + np.log(self.priors[k]))
+            return P_hat.argmax(axis=1)
+
+
+        if DistStr == "Multinomial":
+            P_hat = np.zeros((N,len(self.K)))
+
+            for k,l in self.likelihoods.items():
+                P_hat[:,k] = multinomial.logpdf(X,l["N"],l["P"])+ np.log(self.priors[k])
+            return P_hat.argmax(axis=1)
+        
+        if DistStr == "Bernoulli":
+            P_hat = np.zeros((N,len(self.K)))
+
+            for k,l in self.likelihoods.items():
+                P_hat[:,k] = multinomial.logpdf(X,l["P"])+ np.log(self.priors[k])
+            return P_hat.argmax(axis=1)
+        
