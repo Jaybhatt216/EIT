@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal as mvn #(for stats methods like bayes)
+from scipy.stats import multinomial as mlvn
+from scipy.stats import bernoulli as brn
 
 
 data = pd.read_csv("/Users/jbhatt/Documents/exNB.csv",header=None)
