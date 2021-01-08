@@ -16,7 +16,35 @@ class KNNclassifier():
         for i in range(N):
             dist2 = np.sum((self.X-X[i])**2,axis=1)#check for distance between points in data set, axis=1 means we are suming across
             idxt = np.argsort(dist2)[:K] #take our points and sort them based on distance for each of them, closest on the top
-            gamma_k = 1/(np.sqrt(dist[idxt])+epsilon) #get square root of idxt and avoid division by zero we have + epsilon(minus episoln works the same too)
-            y_hat[i] = np.bincount(self.y[idxt],weights=gamma_k)# how close are the 2 points
+            gamma_k = 1/(np.sqrt(dist2[idxt])+epsilon) #get square root of idxt and avoid division by zero we have + epsilon(minus episoln works the same too)
+            y_hat[i] = np.bincount(self.y[idxt],weights=gamma_k).argmax()# how close are the 2 points
     
         return y_hat
+
+
+def main():
+    D = 2 # number ofdimensions
+    C = 2 # number of classes
+    N = int(C*1e3) #total number of points you will generator
+    C2 =3
+
+
+    #create a random points and add it to an arry centered on the points 0,-2
+    X0 = np.random.randn((N//C2),D)+np.array([2,2])
+    X1 = np.random.randn((N//C),D)+np.array([0,-2])
+    X2 = np.random.randn((N//C),D)+np.array([-2,2])
+    X = np.vstack((X0,X1,X2))
+    y = np.array([0]*(N//C)+[1]*(N//C)+[2]*(N//C2))
+
+    #use KNN
+    knn_instance = KNNclassifier()
+    knn_instance.fit(X,y)
+    X_vis =np.random.uniform(-6,6,(int(N*10),D))
+    y_hat_vis = knn_instance.predict(X_vis,150,epsilon=1e3)
+
+
+
+    #graph
+    plt.figure()
+    plt.scatter(X[:,0],X[:,1], c=y, alpha=0.65)
+    plt.scatter(X_vis[:,0],X_vis[:,1],c=y_hat_vis,alpha=.01)
