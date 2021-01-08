@@ -1,0 +1,22 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import multivariate_normal as mvn
+
+class KNNclassifier():
+
+    def fit(self,X,y):
+        self.X = X
+        self.y = y
+
+    def predict(self,X,K,epsilon=1e-3):
+        N = len(X) #length of x given to the predict, not self.x
+        y_hat = np.zeros(N) #array for y, an Array of Ns N declared above
+
+        for i in range(N):
+            dist2 = np.sum((self.X-X[i])**2,axis=1)#check for distance between points in data set, axis=1 means we are suming across
+            idxt = np.argsort(dist2)[:K] #take our points and sort them based on distance for each of them, closest on the top
+            gamma_k = 1/(np.sqrt(dist[idxt])+epsilon) #get square root of idxt and avoid division by zero we have + epsilon(minus episoln works the same too)
+            y_hat[i] = np.bincount(self.y[idxt],weights=gamma_k)# how close are the 2 points
+    
+        return y_hat
