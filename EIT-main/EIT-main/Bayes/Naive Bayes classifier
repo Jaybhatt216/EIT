@@ -1,0 +1,189 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import multivariate_normal as mvn #(for stats methods like bayes)
+from scipy.stats import multinomial as mlvn
+from scipy.stats import bernoulli as brn
+
+
+data = pd.read_csv("/Users/jbhatt/Documents/exNB.csv",header=None)
+#print(data.head(5))
+#print(data.shape)
+
+
+X = data.to_numpy() #turn into numpy array
+y = X[:,-1] #y is lables, this shorthand means everysingle row in the last column 
+X = X[:,:-1] # X is every row in every column except the last one
+
+#print(y.shape)
+
+###graphing###
+#weight
+plt.figure()
+plt.hist(X[y == 1,0],label='Male',alpha=0.5,bins=30) #histogram of X where y is 0 or 1
+plt.hist(X[y == 0,0],label = 'Female',alpha=0.5,bins=30)
+plt.legend()
+
+#height
+plt.figure()
+plt.hist(X[y==1,1],label = "Male",alpha=0.8)
+plt.hist(X[y==0],label = "Female",alpha=0.25)
+plt.legend()
+
+plt.figure()
+plt.scatter(X[:,0],X[:,1],c=y,alpha=0.25)#all the data in x axis and Y axis
+
+#building classifier
+
+class GaussNB():
+    def fit(self, X, y, epsilon = 1e-3):
+        self.likelyhoods = dict()
+        self.priors = dict()
+
+        self.K = set(y.astype(int))#a range of ints of unique items like 0 to 7
+
+        for k in self.K:
+            X_k = X[y==k,:]
+            self.likelyhoods[k] = {'mean':X_k.mean(axis=0),'variance':X_k.var(axis=0)+ epsilon}
+            self.priors[k] = len(X_k)/len(X) # number of class /total number
+    
+    def predict(self, X):
+
+        N,D = X.shape
+        P_hat = np.zeros((N,len(self.K)))
+        for k,l in self.likelyhoods.items():
+            P_hat[:,k] = mvn.logpdf(X,l["mean"],l["variance"])+np.log(self.priors[k])
+        return P_hat.argmax(axis=1)
+            
+
+
+
+       
+
+
+gnb = GaussNB()
+gnb.fit(X,y)
+y_hat = gnb.predict(X)
+
+def accuracy(y,y_hat):
+    return np.mean(y== y_hat)
+
+print(accuracy(y,y_hat))
+
+class BernNB():
+  def fit(self, X, y, epsilon = 1e-10):
+    N, D = X.shape
+    self.likelihoods = {}
+    self.priors = {}
+    self.K = set(y.astype(int))
+
+    for k in self.K:
+      X_k = X[y==k,:]
+      p = (sum(X_k)+1) / (len(X_k)+2)
+      self.likelihoods[k] = {'mean': p, 'cov': p * (1 - p) + epsilon}
+      self.priors[k] = len(X_k)/len(X)
+
+  def predict(self, X):
+    N, D = X.shape
+    P_hat = np.zeros((N, len(self.K)))
+
+    for k,l in self.likelihoods.items():
+      # Using the Bernoulli funtion/formula. Trick is to get the matrices/vectors to go from mxn to a 1x1 number for each k value.
+      P_hat[:,k] = np.log(self.priors[k]) + np.matmul(X, np.log(l['mean'])) + np.matmul((1 - X), np.log(abs(1-l['mean'])))
+
+    return P_hat.argmax(axis =1)
+    
+bnb = BernNB()
+bnb.fit(X_train,y_train) # Use the X and Y Training set here
+y_hat = bnb.predict(X_test) # Use the X Test here
+print(accuracy(y_test, y_hat))    
+
+#not naive bayes
+class GaussBayes():
+    def fit(self, X, y, epsilon = 1e-3):
+        self.likelihoods = dict()
+        self.priors = dict()
+        sefl.K = set(y.astype(int))
+
+        for k in self.K:
+            X_k = X[y == k,:]
+            N_k, D = X_k.shape
+            mu_k == X_k.mean(axis=0)
+            self.likelihoods[k] = {"mean" : X_k.mean(axis=0),"cov":
+                                  (1/(N_k-1))*np.matmul(X_k-mu_k.T,X_k - mu_k)+ epsilon*np.identity(D) }
+    
+   def predict(self, X):
+        N,D = X.shape
+        P_hat = np.zeros((N, len(self.K)))
+
+        for k,l in self.likelihoods.items():
+            P_hat[:,k] = mvn.logpdf(X, l["mean"], l["cov"])+np.log(self.priors[k])
+
+        return P_hat.argmax(axis=1)
+        
+        
+        
+#multinomial distribution        
+
+class GenBayes():
+    def fit(self,X,y,DistStr,epsilon = 1e-3):
+        self.likelihoods =  dict() #chance of the event
+        self.priors = dict() #prior chance of the event 
+
+        self.K = set(y.astype(int)) #a list of unique  class
+        
+        if DistStr == "Gauss": #if its a guass distribution
+            for k in self.K: #for class in set of class
+                X_k = X[y==k,:] #x_k gets all values under class 1
+                N_k, D = X_k.shape # D is the number of features D stands for dimensions, N_k = number of elemenrs in X_k
+                mu_k = X_k.mean(axis=0) #mu_k is the mean of X_k
+
+                self.likelihoods[k] = {"mean":mu_k,"cov": (1/(N_k-1))
+                                                        *np.matmul((X_k-mu_k).T,X_k-mu_k)+ 
+                                                        epsilon*np.identity(D)} #where the learning of Machine learning happens the matrix multiplication
+                self.priors[k] = len(X_k)/len(X)
+
+        if DistStr == "Multinomial":
+            for k in self.K: #for class in set of class
+                X_k = X[y==k,:] #x_k gets all values under class 1
+                N_k, D = X_k.shape # D is the number of features D stands for dimensions, N_k = number of elemenrs in X_k
+                mu_k = X_k.mean(axis=0) #mu_k is the mean of X_k
+                N =  len(X)
+
+                self.likelihoods[k] = {"N":N, "p":sum(N_k/len(X))}
+                self.priors[k] = len(X_k)/len(X)
+
+        if DistStr == "Bernoulli":
+            for k in self.K:
+                X_k = X[y==k,:]
+                N_k,D = X.shape
+
+                self.likelihoods[k] = {"P":N_k/len(X)}
+                self.priors[k] = len(X_k)/len(X)
+
+
+    def predict(self,X, DistStr):
+        N, D = X.shape
+
+        if DistStr == "Gauss":
+            P_hat = np.zeros((N,len(self,K)))
+
+            for k,l in self.likelihoods.items():
+                P_hat[:,k] = mvn.logpdf(X,l["mean"],l["cov"] + np.log(self.priors[k]))
+            return P_hat.argmax(axis=1)
+
+
+        if DistStr == "Multinomial":
+            P_hat = np.zeros((N,len(self.K)))
+
+            for k,l in self.likelihoods.items():
+                P_hat[:,k] = multinomial.logpdf(X,l["N"],l["P"])+ np.log(self.priors[k])
+            return P_hat.argmax(axis=1)
+        
+        if DistStr == "Bernoulli":
+            P_hat = np.zeros((N,len(self.K)))
+
+            for k,l in self.likelihoods.items():
+                P_hat[:,k] = multinomial.logpdf(X,l["P"])+ np.log(self.priors[k])
+            return P_hat.argmax(axis=1)
+        
