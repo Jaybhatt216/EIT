@@ -1,6 +1,4 @@
-# Authors: Nicolas Goix <nicolas.goix@telecom-paristech.fr>
-#          Alexandre Gramfort <alexandre.gramfort@telecom-paristech.fr>
-# License: BSD 3 clause
+
 
 import numbers
 import numpy as np
